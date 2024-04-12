@@ -1,0 +1,45 @@
+{
+  "name": "react-to-html",
+  "version": "0.0.1",
+  "description": "A react package to generate HTML for conversion to Email or PDF from shared components",
+  "license": "MIT",
+  "author": "Matt Litherland",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "keywords": [
+    "email",
+    "html",
+    "pdf",
+    "react",
+    "nextjs"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:html": "ts-node src/build-html.ts"
+  },
+  "bin": {
+    "build-tohtml": "./dist/cli.js"
+  },
+  "dependencies": {
+    "@types/html-minifier": "^4.0.5",
+    "@types/js-beautify": "^1.14.3",
+    "@types/node": "^20.12.7",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "html-minifier": "^4.0.0",
+    "install": "^0.13.0",
+    "js-beautify": "^1.15.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.4"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "tailwindcss": "^3.4.3"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.75",
+    "@types/react-dom": "^18.2.24"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    // "jsxFactory": "React.createElement",
+    "esModuleInterop": true,
+    "strict": true,
+    "outDir": "dist",
+    "declaration": true,
+    "declarationDir": "dist"
+  },
+  "include": [
+    "src/**/*", 
+    "tailwind.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "dist"
+  ]
+}

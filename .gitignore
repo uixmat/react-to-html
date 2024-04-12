@@ -1,0 +1,16 @@
+# dependencies
+/node_modules
+
+# misc
+.DS_Store
+*.pem
+
+# test components
+src/Invoice.tsx
+src/InvoiceTwo.tsx
+
+# tailwind config
+tailwind.config.js
+
+# config files
+invoices.config.ts
