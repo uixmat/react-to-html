@@ -6,6 +6,7 @@ export interface SettingsType {
     content: ComponentSettings[];
     pageHeight?: string;
     pageWidth?: string;
+    outputDir?: string;
     outputFormat: "minified" | "pretty";
     decorator?: DecoratorFunction;
 }

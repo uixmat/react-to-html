@@ -18,7 +18,7 @@ import { SettingsType } from './src/types';
 export const settings: SettingsType = {
   content: [
     {
-      path: './components/Invoice.tsx',
+      path: './components/Example.tsx',
       props: {
         id: "{{ invoice_id }}",
         amount: "{{ invoice_amount }}",
@@ -26,7 +26,7 @@ export const settings: SettingsType = {
       },
     },
     {
-      path: './components/InvoiceTwo.tsx',
+      path: './components/ExampleTwo.tsx',
       props: {
         id: "{{ invoice_id }}",
         amount: "{{ invoice_amount }}",

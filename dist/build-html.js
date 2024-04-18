@@ -6,6 +6,7 @@ import path from 'path';
 import postcss from 'postcss';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
+import PurgeCSS from '@fullhuman/postcss-purgecss';
 import pkg from 'js-beautify';
 import { minify } from 'html-minifier';
 const { html: beautify } = pkg;
@@ -31,6 +32,20 @@ function transpileModule(filePath) {
     const fileContents = fs.readFileSync(filePath, 'utf8');
     const transpiled = ts.transpileModule(fileContents, { compilerOptions: tsConfig });
     return transpiled.outputText;
+}
+// Function to generate critical CSS using Tailwind and PurgeCSS
+async function generateCriticalCSS(htmlContent) {
+    return postcss([
+        tailwindcss,
+        autoprefixer,
+        PurgeCSS({
+            content: [{ raw: htmlContent, extension: 'html' }],
+            defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
+            keyframes: true
+        })
+    ])
+        .process('@tailwind utilities;', { from: undefined })
+        .then((result) => result.css);
 }
 export const renderReactToHTML = async () => {
     console.log(`${colors.blue}Building...${colors.reset}`);
@@ -84,7 +99,9 @@ export const renderReactToHTML = async () => {
             const Component = (await import(tempFilePath)).default;
             const componentContent = ReactDOMServer.renderToStaticMarkup(React.createElement(Component, contentItem.props));
             // Generate CSS
-            const css = await postcss([tailwindcss, autoprefixer]).process('@tailwind utilities;', { from: undefined }).then((result) => result.css);
+            // const css = await postcss([tailwindcss, autoprefixer]).process('@tailwind utilities;', { from: undefined }).then((result: any) => result.css);
+            const css = await generateCriticalCSS(componentContent);
+            console.log("✔ Generated critical CSS");
             // Default decorator
             const defaultDecorator = (content, styles) => `
       <!DOCTYPE html>
@@ -133,6 +150,7 @@ export const renderReactToHTML = async () => {
             const duration = Date.now() - startTime;
             // Log success message
             console.log(`${colors.green}✔ Successfully processed ${colors.reset}${componentBaseName} ${colors.green}in ${duration}ms${colors.reset}`);
+            console.log(' ');
         }
         finally {
             if (fs.existsSync(tempFilePath)) {
@@ -142,7 +160,7 @@ export const renderReactToHTML = async () => {
     }
     // Log completion message
     console.log(' ');
-    console.log(`${colors.green}Complete!${colors.reset}`);
+    console.log(`${colors.green}✔ Complete!${colors.reset}`);
     console.log(`→ Your components have been built to ./${outputDir}/`);
     console.log(' ');
 };

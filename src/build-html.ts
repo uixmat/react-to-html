@@ -3,9 +3,10 @@ import fs from 'fs';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import path from 'path';
-import postcss from 'postcss';
+import postcss, { Result } from 'postcss';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
+import PurgeCSS from '@fullhuman/postcss-purgecss';
 import pkg from 'js-beautify';
 import { minify } from 'html-minifier';
 import { DecoratorFunction } from './';
@@ -50,6 +51,21 @@ export interface BaseConfig {
   outputDir?: string;
   outputFormat: 'minified' | 'pretty';
   decorator?: DecoratorFunction;
+}
+
+// Function to generate critical CSS using Tailwind and PurgeCSS
+async function generateCriticalCSS(htmlContent: string): Promise<string> {
+  return postcss([
+    tailwindcss,
+    autoprefixer,
+    PurgeCSS({
+      content: [{ raw: htmlContent, extension: 'html' }],
+      defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
+      keyframes: true
+    })
+  ])
+  .process('@tailwind utilities;', { from: undefined })
+  .then((result: Result) => result.css);
 }
 
 export const renderReactToHTML = async () => {
@@ -111,7 +127,9 @@ export const renderReactToHTML = async () => {
       const componentContent = ReactDOMServer.renderToStaticMarkup(React.createElement(Component, contentItem.props));
 
       // Generate CSS
-      const css = await postcss([tailwindcss, autoprefixer]).process('@tailwind utilities;', { from: undefined }).then((result: any) => result.css);
+      // const css = await postcss([tailwindcss, autoprefixer]).process('@tailwind utilities;', { from: undefined }).then((result: any) => result.css);
+      const css = await generateCriticalCSS(componentContent);
+      console.log("✔ Generated critical CSS");
 
       // Default decorator
       const defaultDecorator: DecoratorFunction = (content, styles) => `
@@ -167,6 +185,7 @@ export const renderReactToHTML = async () => {
 
       // Log success message
       console.log(`${colors.green}✔ Successfully processed ${colors.reset}${componentBaseName} ${colors.green}in ${duration}ms${colors.reset}`);
+      console.log(' ');
     } finally {
       if (fs.existsSync(tempFilePath)) {
         fs.unlinkSync(tempFilePath);
