@@ -1,12 +1,11 @@
 import ts from 'typescript';
-import fs from 'fs';
+import fs , { readFileSync} from 'fs';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import path from 'path';
 import postcss, { Result } from 'postcss';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
-import PurgeCSS from '@fullhuman/postcss-purgecss';
 import pkg from 'js-beautify';
 import { minify } from 'html-minifier';
 import { DecoratorFunction } from './';
@@ -51,20 +50,31 @@ export interface BaseConfig {
   outputDir?: string;
   outputFormat: 'minified' | 'pretty';
   decorator?: DecoratorFunction;
+  globalStyles?: string;
 }
 
 // Function to generate critical CSS using Tailwind and PurgeCSS
-async function generateCriticalCSS(htmlContent: string): Promise<string> {
+async function generateCriticalCSS(htmlContent: string, userSettings: BaseConfig): Promise<string> {
+  // Load global styles if specified
+  let globalStyles = '';
+  if (userSettings.globalStyles) {
+    console.log(`→ Loading global styles from ${userSettings.globalStyles}`);
+    try {
+      globalStyles = readFileSync(userSettings.globalStyles, 'utf8');
+    } catch (err) {
+      console.error(`Error loading global styles from ${userSettings.globalStyles}:`, err);
+    }
+  }
+
+  const css = `${globalStyles} @tailwind base; @tailwind components; @tailwind utilities;`;
   return postcss([
-    tailwindcss,
-    autoprefixer,
-    PurgeCSS({
-      content: [{ raw: htmlContent, extension: 'html' }],
-      defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
-      keyframes: true
-    })
+    tailwindcss(),
+    autoprefixer({
+      overrideBrowserslist: ['last 2 versions', '> 1%'], 
+      grid: true
+    }),
   ])
-  .process('@tailwind utilities;', { from: undefined })
+  .process(css, { from: undefined })
   .then((result: Result) => result.css);
 }
 
@@ -109,9 +119,11 @@ export const renderReactToHTML = async () => {
     /**
      * Transpile the component file to JavaScript
      */
+    console.log("→ Transpiling the component...");
     const componentFullPath = path.resolve(process.cwd(), contentItem.path);
+    const componentDir = path.dirname(componentFullPath);  // Get directory of the component
+    const tempFilePath = path.join(componentDir, `tempComponent${index}.mjs`);  // Create temp file path in the same directory
     const transpiledCode = transpileModule(componentFullPath);
-    const tempFilePath = path.resolve(process.cwd(), `tempComponent${index}.mjs`);
     fs.writeFileSync(tempFilePath, transpiledCode);
 
     /**
@@ -127,34 +139,35 @@ export const renderReactToHTML = async () => {
       const componentContent = ReactDOMServer.renderToStaticMarkup(React.createElement(Component, contentItem.props));
 
       // Generate CSS
-      // const css = await postcss([tailwindcss, autoprefixer]).process('@tailwind utilities;', { from: undefined }).then((result: any) => result.css);
-      const css = await generateCriticalCSS(componentContent);
+      const css = await generateCriticalCSS(componentContent, userSettings);
       console.log("✔ Generated critical CSS");
 
       // Default decorator
-      const defaultDecorator: DecoratorFunction = (content, styles) => `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            body, html {
-              height: ${userSettings.pageHeight ? userSettings.pageHeight : 'auto'};
-              width: ${userSettings.pageWidth ? userSettings.pageWidth : '100%'};
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-              font-family: system-ui, sans-serif;
-            }
-            ${styles}
-          </style>
-        </head>
-        <body>
-          ${content}
-        </body>
-      </html>
-      `;
+      const defaultDecorator: DecoratorFunction = (content, styles) => {
+        return `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body, html {
+                height: ${userSettings.pageHeight ? userSettings.pageHeight : 'auto'};
+                width: ${userSettings.pageWidth ? userSettings.pageWidth : '100%'};
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: system-ui, sans-serif;
+              }
+              ${styles}
+            </style>
+          </head>
+          <body>
+            ${content}
+          </body>
+        </html>
+        `;
+            };
       
       // Decorate the component
       const decorate = userSettings.decorator ? userSettings.decorator : defaultDecorator;

@@ -9,5 +9,6 @@ export interface BaseConfig {
     outputDir?: string;
     outputFormat: 'minified' | 'pretty';
     decorator?: DecoratorFunction;
+    globalStyles?: string;
 }
 export declare const renderReactToHTML: () => Promise<void>;
