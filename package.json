@@ -1,6 +1,6 @@
 {
   "name": "react-to-html",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A react package to generate HTML for conversion to Email or PDF from shared components",
   "license": "MIT",
   "author": "Matt Litherland",
