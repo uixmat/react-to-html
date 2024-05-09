@@ -1,11 +1,9 @@
 /** 
- * Settings
- * @description This file contains the settings for the invoices component.
- * @file invoices.config.ts
- * @type {Object}
+ * @description This file contains the settings for react-to-html.
+ * @file tohtml.config.ts
  * @property {Array} content - Array of components to render.
- * @property {string} path - Path to the component.
- * @property {Object} props - Props to pass to the component.
+ *    @property {string} path - Path to the component.
+ *    @property {Object} props - Props to pass to the component.
  * @property {string} pageHeight - Optional height of the page.
  * @property {string} pageWidth - Optional width of the page.
  * @property {string} outputDir - Optional output directory.
@@ -20,30 +18,18 @@ export const settings: SettingsType = {
     {
       path: './components/Example.tsx',
       props: {
-        id: "{{ invoice_id }}",
-        amount: "{{ invoice_amount }}",
-        dueDate: "{{ invoice_date }}",
+        foo: "bar",
       },
     },
     {
       path: './components/ExampleTwo.tsx',
       props: {
-        id: "{{ invoice_id }}",
-        amount: "{{ invoice_amount }}",
-        dueDate: "{{ invoice_date }}",
+        foo: "bar",
       },
     }
   ],
   pageHeight: '297mm',
   pageWidth: '210mm',
+  outputDir: './output',
   outputFormat: 'pretty',
-  /**
-   * Decorator function
-   * @param {string} content - The content of the component.
-   * @param {string} styles - The CSS styles for the component.
-   * @example ...
-   * decorator: (content: string, styles: string) => {
-   *   // Add your code here
-   * },
-   */
 };
